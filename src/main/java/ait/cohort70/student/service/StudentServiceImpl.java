@@ -6,11 +6,9 @@ import ait.cohort70.student.dto.StudentCredentialsDto;
 import ait.cohort70.student.dto.StudentDto;
 import ait.cohort70.student.dto.StudentUpdateDto;
 import ait.cohort70.student.dto.exceptions.EntityExistsException;
-import ait.cohort70.student.dto.exceptions.NoFoundException;
+import ait.cohort70.student.dto.exceptions.NotFoundException;
 import ait.cohort70.student.model.Student;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -34,39 +32,56 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public StudentDto findStudent(Long id) {
-        Student student = studentRepository.findById(id).orElseThrow(NoFoundException::new);
+        Student student = studentRepository.findById(id).orElseThrow(NotFoundException::new);
         return new StudentDto(student.getId(), student.getName(), student.getScores());
     }
 
     @Override
     public StudentDto removeStudent(Long id) {
-        Student student = studentRepository.findById(id).orElseThrow(NoFoundException::new);
+        Student student = studentRepository.findById(id).orElseThrow(NotFoundException::new);
         studentRepository.deleteById(id);
         return new StudentDto(student.getId(), student.getName(), student.getScores());
     }
 
     @Override
     public StudentCredentialsDto updateStudent(Long id, StudentUpdateDto studentUpdateDto) {
-        return null;
+        Student student = studentRepository.findById(id).orElseThrow(NotFoundException::new);
+        if (studentUpdateDto.getName() != null) {
+            student.setName(studentUpdateDto.getName());
+        }
+        if (studentUpdateDto.getPassword() != null) {
+            student.setPassword(studentUpdateDto.getPassword());
+        }
+        return new StudentCredentialsDto(student.getId(), student.getName(), student.getPassword());
+
     }
 
     @Override
     public void addScore(Long id, ScoreDto scoreDto) {
-
+        Student student = studentRepository.findById(id).orElseThrow(NotFoundException::new);
+        student.addScore(scoreDto.getExamName(), scoreDto.getScore());
     }
 
     @Override
     public List<StudentDto> findStudentsByName(String name) {
-        return List.of();
+        return studentRepository.findAll().stream()
+                .filter(s -> name.equalsIgnoreCase(s.getName()))
+                .map(s -> new StudentDto(s.getId(), s.getName(), s.getScores()))
+                .toList();
     }
 
     @Override
     public Long countStudentsByNames(Set<String> names) {
-        return 0L;
+        return studentRepository.findAll().stream()
+                .filter(s -> names.contains(s.getName()))
+                .count();
     }
 
     @Override
     public List<StudentDto> findStudentsByExamNameMinScore(String examName, Integer minScore) {
-        return List.of();
+        return studentRepository.findAll().stream()
+                .filter(s -> s.getScores().containsKey(examName) && s.getScores().get(examName) > minScore)
+                .map(s -> new StudentDto(s.getId(), s.getName(), s.getScores()))
+                .toList();
     }
 }
