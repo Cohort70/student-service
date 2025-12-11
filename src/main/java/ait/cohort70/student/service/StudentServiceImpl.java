@@ -9,6 +9,7 @@ import ait.cohort70.student.dto.exceptions.EntityExistsException;
 import ait.cohort70.student.dto.exceptions.NotFoundException;
 import ait.cohort70.student.model.Student;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,12 +19,12 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class StudentServiceImpl implements StudentService {
     private final StudentRepository studentRepository;
+    private final ModelMapper modelMapper;
 
     @Override
     public void addStudent(StudentCredentialsDto studentCredentialsDto) {
         if (studentRepository.findById(studentCredentialsDto.getId()).isEmpty()) {
-            Student student = new Student(studentCredentialsDto.getId(), studentCredentialsDto.getName(),
-                    studentCredentialsDto.getPassword());
+            Student student = modelMapper.map(studentCredentialsDto, Student.class);
             studentRepository.save(student);
         } else {
             throw new EntityExistsException();
