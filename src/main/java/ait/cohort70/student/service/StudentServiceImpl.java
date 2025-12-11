@@ -52,6 +52,7 @@ public class StudentServiceImpl implements StudentService {
         if (studentUpdateDto.getPassword() != null) {
             student.setPassword(studentUpdateDto.getPassword());
         }
+        studentRepository.save(student);
         return new StudentCredentialsDto(student.getId(), student.getName(), student.getPassword());
 
     }
@@ -60,12 +61,12 @@ public class StudentServiceImpl implements StudentService {
     public void addScore(Long id, ScoreDto scoreDto) {
         Student student = studentRepository.findById(id).orElseThrow(NotFoundException::new);
         student.addScore(scoreDto.getExamName(), scoreDto.getScore());
+        studentRepository.save(student);
     }
 
     @Override
     public List<StudentDto> findStudentsByName(String name) {
-        return studentRepository.findAll().stream()
-                .filter(s -> name.equalsIgnoreCase(s.getName()))
+        return studentRepository.findByNameIgnoreCase(name)
                 .map(s -> new StudentDto(s.getId(), s.getName(), s.getScores()))
                 .toList();
     }
@@ -79,8 +80,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public List<StudentDto> findStudentsByExamNameMinScore(String examName, Integer minScore) {
-        return studentRepository.findAll().stream()
-                .filter(s -> s.getScores().containsKey(examName) && s.getScores().get(examName) > minScore)
+        return studentRepository.findByExamAndScoreGreaterThan(examName, minScore)
                 .map(s -> new StudentDto(s.getId(), s.getName(), s.getScores()))
                 .toList();
     }
