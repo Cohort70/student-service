@@ -23,7 +23,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public void addStudent(StudentCredentialsDto studentCredentialsDto) {
-        if (studentRepository.findById(studentCredentialsDto.getId()).isEmpty()) {
+        if (!studentRepository.existsById(studentCredentialsDto.getId())) {
             Student student = modelMapper.map(studentCredentialsDto, Student.class);
             studentRepository.save(student);
         } else {
